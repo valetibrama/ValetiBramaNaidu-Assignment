@@ -5,12 +5,12 @@ import "../../../node_modules/bootstrap/scss/utilities";
 import "../../../node_modules/bootstrap/scss/transitions";
 import "../../../node_modules/bootstrap/scss/_Form.scss";
 
-modal-form-label{
-  font-size:1.5rem;
-  font-weight:400
+.modal-form-label{
+  font-size: 1.5rem;
+  font-weight:400;
   color: $green;
 }
-modal-form-group {
+.modal-form-group {
   display: flex;
   flex-flow: column wrap;
   justify-content: space-between;
