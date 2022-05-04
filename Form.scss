@@ -1,0 +1,299 @@
+import React-App from './react'
+import Form from 'react-bootstrap/Form'
+import FormGroup from 'react-bootstrap/FormGroup';
+import Button from 'react-bootstrap/Button';
+import { reduxForm, Field } from 'redux-form';
+import ToolTip from '../tooltips/ToolTip';
+import Validate from './validate';
+import './form.scss';
+import * as data from '../../data/data.json';
+
+const reateRender = (render) => ({
+
+  input,
+  meta,
+  label,
+  placeholder,
+  ...rest
+}) => (
+  <FormGroup className="modal-form-group">
+    <Form.Label className="modal-form-label">{label}</Form.Label>
+    {render(input, label, placeholder, rest)}
+  </FormGroup>
+);
+const showResults = async (values, dispatch, { history }) => {
+  const title = Object.keys(values);
+  const responseType = Object.values(values);
+
+  const requestBody = title.map((t, index) => ({
+    title: t,
+    responseType: responseType[index],
+    question: data.questions[index],
+  }));
+  dispatch({
+    type: 'SUBMIT_FORM_REQUESTED',
+    payload: { requestBody, history },
+  });
+};
+
+const RenderInput = createRenderer((input, label, ...rest) => (
+  <div className="btn-block">
+    <Form.Control
+      data-testid="btn-1"
+      {...input}
+      id="btn-1"
+      className={rest[1].isActive ? 'form-btn active' : 'form-btn'}
+      type="button"
+      value="Creating a new Infrastructure"
+    />
+    <Form.Control
+      data-testid="btn-2"
+      id="btn-2"
+      {...input}
+      className="form-btn"
+      type="button"
+      value="Upgrading to vCloud Suite"
+    />
+  </div>
+));
+
+const RenderSelect = createRenderer(
+  (input, label, placeholder, { children }) => (
+    <Form.Control
+      as="select"
+      data-testid="select"
+      value=""
+      onChange={input.onChange}
+      {...input}
+      required
+    >
+      {children}
+    </Form.Control>
+  ),
+);
+
+const RenderSimpleInput = createRenderer((input, label, placeholder) => (
+  <Form.Control
+    data-testid="number"
+    {...input}
+    type="number"
+    min={1}
+    placeholder={placeholder}
+    required
+  />
+));
+
+const RenderRadio = ({ input, meta, ...rest }) => (
+  <Form.Check
+    data-testid="radio"
+    {...input}
+    {...rest}
+    type="radio"
+    checked={input.value === rest.value}
+    required
+  />
+);
+
+const RenderRange = ({ input, ...rest }) => (
+  <Form.Control
+    {...input}
+    {...rest}
+    min={rest.value.min}
+    max={rest.value.max}
+    type="range"
+    value={input.value}
+    onChange={input.onChange}
+    required
+  />
+);
+
+const formPage = ({
+  handleSubmit, submitting, pristine, reset, history,
+}) => (
+  <Form
+    data-testid="form"
+    className="modal-form"
+    onSubmit={handleSubmit(showResults)}
+  >
+    <Field name="Type" label="1. Are You..." component={RenderInput} />
+    <Field name="Currency" label="2. Currency" component={RenderSelect}>
+      {
+        <option value="" disabled>
+          Select currency
+        </option>
+      }
+      {data.currencies.map((currency) => (
+        <option key={currency} value={currency}>
+          {currency}
+        </option>
+      ))}
+    </Field>
+    <Field
+      name="TotalVM"
+      label="3. How many virtual machine's need to be deployed?"
+      placeholder="Enter the number of VM's desired"
+      component={RenderSimpleInput}
+    />
+    <Form.Group className="modal-form-group">
+      <Form.Label data-testid="vm-label" className="modal-form-label">
+        4. Which VMware product edition would you like to compare with
+        Microsofts Solution?
+      </Form.Label>
+      <Form.Text className="modal-form-text" />
+      {data.products.map((product) => (
+        <Field
+          key={product}
+          name="productEdition"
+          label={product}
+          component={RenderRadio}
+          props={{ value: product }}
+        />
+      ))}
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label data-testid="host-type-label" className="modal-form-label">
+        5. What virtualization host type would you like to use?
+      </Form.Label>
+      <Form.Text className="modal-form-text">
+        The virtualization hosts are the servers on which you will install the
+        hypervisor and user to run your virtualized applications. The following
+        virtualization hosts are available:
+      </Form.Text>
+      {data.hosts.map((host) => (
+        <Field
+          key={host.id}
+          name="hostType"
+          label={host.label}
+          component={RenderRadio}
+          props={{ value: host.value }}
+        />
+      ))}
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">
+        6. What type of storage you would like to employ?
+        <ToolTip
+          tooltip="VMWare vSAN provides radically simple storage embedded in vSphere and built on industry-standard server components for exceptional performance and low costs."
+          placement="right"
+          className="tooltip"
+        >
+          <span className="three-dots" />
+        </ToolTip>
+      </Form.Label>
+
+      <Form.Text className="modal-form-text">
+        The virtualization hosts are the servers on which you will install the
+        hypervisor and user to run your virtualized applications. The following
+        virtualization hosts are available:
+      </Form.Text>
+      {data.storageType.map((type) => (
+        <Field
+          key={type.id}
+          name="storageType"
+          label={type.label}
+          component={RenderRadio}
+          props={{ value: type.value }}
+        />
+      ))}
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">
+        7. Infrastructure costs - Electricity
+      </Form.Label>
+      <Form.Text className="modal-form-text">
+        Select the most reasonable estimate for electricity costs in the
+        proposed data center
+      </Form.Text>
+      {data.powerCost.map((power) => (
+        <Field
+          key={power.id}
+          name="powerCost"
+          label={power.label}
+          component={RenderRadio}
+          props={{ value: power.value }}
+        />
+      ))}
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">
+        8. Infrastructure costs - Data center real estate and build out
+      </Form.Label>
+      <Form.Text className="modal-form-text">
+        Select the most reasonable estimate for real estate costs in the
+        proposed data center location. Fully burdened datat center real estate
+        cost includes facility capital cost for construction, power and cooling
+        equipment and weighted depreciation.
+      </Form.Text>
+      {data.spaceCost.map((space) => (
+        <Field
+          key={space.id}
+          name="spaceCost"
+          label={space.label}
+          component={RenderRadio}
+          props={{ value: space.value }}
+        />
+      ))}
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">
+        9. What general VM density are you envisioning for your data center
+      </Form.Label>
+      <Form.Text className="modal-form-text">
+        The default value for VM density is set to six VMs per processor.
+        Depending on your hardware setup and workload size, you can adjust the
+        number of virtual machines running on each processor.
+      </Form.Text>
+      <Field
+        name="vmDensity"
+        label="Low"
+        component={RenderRange}
+        props={{ value: { min: '4', max: '20' } }}
+      />
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">
+        10. Additional VMware VMs per CPU
+        <ToolTip
+          tooltip="VMWare customer experience, analyst opinions, and independent studies confirm the VMWare vSphere VM density advantage over Microsoft Hyher-V this calculator assumes vSphere supports one additional VM per processor compared to Hypher-V, but you can increase that value based on your expectations."
+          placement="right"
+          className="tooltip"
+        >
+          <span className="three-dots" />
+        </ToolTip>
+      </Form.Label>
+      <Form.Text className="modal-form-text">
+        Additional VMware VMs per CPU
+      </Form.Text>
+      <Field
+        name="densityAdvantage"
+        label="Low"
+        component={RenderRange}
+        props={{ value: { min: '0', max: '10' } }}
+      />
+    </Form.Group>
+    <Form.Group className="modal-form-group">
+      <Form.Label className="modal-form-label">11. Time Frame</Form.Label>
+      <Form.Text className="modal-form-text">
+        Please select the number of years for TCO evaluation.
+      </Form.Text>
+      <Field
+        name="timeFrame"
+        label="Low"
+        component={RenderRange}
+        props={{ value: { min: '3', max: '6' } }}
+      />
+    </Form.Group>
+    <Button type="reset" disabled={pristine || submitting} onClick={reset}>
+      Reset
+    </Button>
+    <Button type="submit" disabled={submitting}>
+      Submit
+    </Button>
+  </Form>
+);
+
+export default reduxForm({
+  form: 'comparisonCalculator',
+  destroyOnUnmount: false,
+  validate,
+})(FormPage); 
